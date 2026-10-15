@@ -1,0 +1,1784 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>NEST</title>
+<meta name="description" content="北海道北見市のバーを探せる検索・レビュー・おすすめ発見サイト">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+
+<style>
+:root {
+  --bg: #121014;
+  --bg-elevated: #1a171c;
+  --card: #1c191f;
+  --card-hover: #232028;
+  --border: rgba(255, 255, 255, 0.08);
+  --text: #ece7e0;
+  --text-muted: #a39c93;
+  --accent: #caa15a;
+  --accent-soft: rgba(202, 161, 90, 0.15);
+  --accent-strong: #e0b96f;
+  --danger: #c96a5a;
+  --radius: 14px;
+  --radius-thumb: 3px;
+  --serif: "Shippori Mincho", "Yu Mincho", serif;
+  --sans: "Noto Sans JP", "Hiragino Sans", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  position: relative;
+}
+
+/* Fine film-grain overlay — breaks up the flatness of solid dark
+   panels and gradients, which is one of the easiest tells of an
+   untouched AI-generated layout. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  background-size: 180px 180px;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+}
+
+img {
+  max-width: 100%;
+}
+
+.container {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* Header */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(18, 16, 20, 0.85);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+
+.site-header .container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 72px;
+}
+
+.logo {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-family: var(--serif);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+}
+
+.logo span.mark {
+  color: var(--accent);
+}
+
+.city-badge {
+  font-size: 0.72rem;
+  font-family: var(--sans);
+  font-weight: 500;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 12px;
+  letter-spacing: 0.05em;
+}
+
+.site-nav {
+  display: flex;
+  gap: 28px;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.site-nav a:hover {
+  color: var(--accent-strong);
+}
+
+/* Hero */
+.hero {
+  padding: 108px 0 64px;
+  text-align: center;
+  background: radial-gradient(ellipse at top, rgba(202, 161, 90, 0.07), transparent 60%);
+}
+
+.hero-eyebrow {
+  color: var(--accent);
+  font-size: 0.76rem;
+  letter-spacing: 0.28em;
+  font-weight: 500;
+  margin-bottom: 26px;
+}
+
+.hero h1 {
+  font-family: var(--serif);
+  font-size: clamp(2.6rem, 6.4vw, 4.6rem);
+  font-weight: 700;
+  margin: 0 0 26px;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+.hero h1 em {
+  font-style: normal;
+  color: var(--accent-strong);
+}
+
+.hero p.lead {
+  color: var(--text-muted);
+  max-width: 480px;
+  margin: 0 auto 48px;
+  font-size: 0.88rem;
+  letter-spacing: 0.01em;
+}
+
+/* Search panel */
+.search-panel {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px;
+  max-width: 880px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr auto;
+  gap: 12px;
+  text-align: left;
+}
+
+.search-panel input,
+.search-panel select {
+  width: 100%;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-family: var(--sans);
+  font-size: 0.92rem;
+  appearance: none;
+}
+
+.search-panel input::placeholder {
+  color: var(--text-muted);
+}
+
+.search-panel input:focus,
+.search-panel select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.btn {
+  display: inline-block;
+  border: none;
+  cursor: pointer;
+  font-family: var(--sans);
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 12px 22px;
+  background: var(--accent);
+  color: #1a140a;
+  font-size: 0.92rem;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.btn:hover {
+  background: var(--accent-strong);
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn-outline,
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: 999px;
+  padding: 10px 20px;
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.btn-outline:hover,
+.btn-ghost:hover {
+  border-color: var(--accent);
+  color: var(--accent-strong);
+  background: transparent;
+}
+
+.discover-cta {
+  margin-top: 22px;
+}
+
+.discover-cta-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #1a140a;
+  font-size: 0.55rem;
+}
+
+.tag-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.chip {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.chip:hover {
+  border-color: var(--accent);
+  color: var(--accent-strong);
+}
+
+.chip.active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+/* Results */
+.results-section {
+  padding: 56px 0 80px;
+}
+
+.results-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.results-header h2 {
+  font-family: var(--serif);
+  font-size: 1.3rem;
+  margin: 0;
+}
+
+.results-count {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.sort-select {
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+}
+
+.bar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.bar-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+
+.bar-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(202, 161, 90, 0.4);
+  background: var(--card-hover);
+}
+
+.bar-thumb {
+  height: 168px;
+  position: relative;
+  overflow: hidden;
+  background-color: #17151a;
+  border-bottom: 1px solid var(--border);
+}
+
+.thumb-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.bar-card:hover .thumb-photo {
+  transform: scale(1.045);
+}
+
+.thumb-photo-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(10, 9, 11, 0.05) 0%, rgba(10, 9, 11, 0.55) 100%);
+}
+
+/* Fallback used only when a bar has no photo yet */
+.thumb-glyph {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 4.6rem;
+  line-height: 1;
+  color: color-mix(in srgb, var(--tint, var(--accent)) 82%, #fff 6%);
+  opacity: 0.9;
+  padding: 6px 2px 2px 14px;
+  letter-spacing: -0.02em;
+  text-shadow: 0 1px 24px color-mix(in srgb, var(--tint, var(--accent)) 40%, transparent);
+}
+
+.bar-thumb.no-photo {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  background-image:
+    repeating-linear-gradient(115deg, rgba(255,255,255,0.035) 0px, rgba(255,255,255,0.035) 1px, transparent 1px, transparent 13px),
+    linear-gradient(160deg, color-mix(in srgb, var(--tint, var(--accent)) 30%, #17151a), #14121600 70%);
+}
+
+.bar-genre-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  background: rgba(10, 9, 11, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text);
+  padding: 3px 10px;
+  border-radius: var(--radius-thumb);
+  z-index: 1;
+  backdrop-filter: blur(6px);
+}
+
+.bar-body {
+  padding: 18px 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.bar-name {
+  font-family: var(--serif);
+  font-size: 1.08rem;
+  font-weight: 700;
+}
+
+.bar-meta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.bar-rating {
+  color: var(--accent);
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+}
+
+.bar-rating .count {
+  color: var(--text-muted);
+  letter-spacing: normal;
+  margin-left: 4px;
+}
+
+.bar-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.bar-tags .tag {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px 9px;
+}
+
+.bar-price {
+  margin-top: auto;
+  font-size: 0.85rem;
+  color: var(--text);
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.bar-price .view-link {
+  color: var(--accent-strong);
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+}
+
+/* Roadmap */
+.roadmap-section {
+  padding: 70px 0;
+  background: var(--bg-elevated);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.roadmap-header {
+  text-align: center;
+  max-width: 620px;
+  margin: 0 auto 44px;
+}
+
+.roadmap-header .hero-eyebrow {
+  margin-bottom: 14px;
+}
+
+.roadmap-header h2 {
+  font-family: var(--serif);
+  font-size: clamp(1.5rem, 3vw, 2.1rem);
+  margin: 0 0 14px;
+  text-wrap: balance;
+}
+
+.roadmap-header p {
+  color: var(--text-muted);
+  font-size: 0.92rem;
+}
+
+.city-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 14px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.city-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px 12px;
+  text-align: center;
+  background: var(--card);
+}
+
+.city-card.active {
+  border-color: var(--accent);
+  background: linear-gradient(160deg, rgba(202, 161, 90, 0.14), transparent);
+}
+
+.city-card .city-name {
+  font-family: var(--serif);
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.city-card .status {
+  font-size: 0.7rem;
+  border-radius: 999px;
+  padding: 3px 10px;
+  display: inline-block;
+}
+
+.city-card.active .status {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+.city-card:not(.active) .status {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-muted);
+}
+
+/* Footer */
+.site-footer {
+  padding: 36px 0;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.site-footer .disclaimer {
+  margin-top: 8px;
+  font-size: 0.72rem;
+  opacity: 0.7;
+}
+
+/* Detail page */
+.detail-hero {
+  padding: 48px 0 32px;
+  border-bottom: 1px solid var(--border);
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-bottom: 24px;
+  cursor: pointer;
+}
+
+.back-link:hover {
+  color: var(--accent-strong);
+}
+
+.detail-top {
+  display: flex;
+  gap: 26px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.detail-thumb {
+  width: 120px;
+  height: 120px;
+  border-radius: var(--radius-thumb);
+  background-color: #17151a;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.detail-thumb.no-photo {
+  background-image:
+    repeating-linear-gradient(115deg, rgba(255,255,255,0.035) 0px, rgba(255,255,255,0.035) 1px, transparent 1px, transparent 13px),
+    linear-gradient(160deg, color-mix(in srgb, var(--tint, var(--accent)) 32%, #17151a), #14121600 75%);
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+}
+
+.detail-thumb .thumb-glyph {
+  font-size: 2.6rem;
+  padding: 6px 4px 4px 10px;
+}
+
+.detail-title-block .bar-genre-badge {
+  position: static;
+  display: inline-block;
+  margin-bottom: 10px;
+}
+
+.detail-title-block h1 {
+  font-family: var(--serif);
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  margin: 0 0 8px;
+  text-wrap: balance;
+}
+
+.detail-meta-line {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.detail-body {
+  padding: 44px 0 80px;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 40px;
+  align-items: start;
+}
+
+.detail-section h2 {
+  font-family: var(--serif);
+  font-size: 1.2rem;
+  margin: 0 0 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.detail-section {
+  margin-bottom: 44px;
+}
+
+.description-text {
+  color: var(--text);
+  font-size: 0.96rem;
+}
+
+.info-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px;
+}
+
+.info-row {
+  display: flex;
+  gap: 14px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.88rem;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-row .label {
+  color: var(--text-muted);
+  min-width: 64px;
+  flex-shrink: 0;
+}
+
+.review-item {
+  padding: 18px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.review-item:first-child {
+  padding-top: 0;
+}
+
+.review-item-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.review-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.review-date {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+.review-stars {
+  color: var(--accent);
+  letter-spacing: 1px;
+  font-size: 0.85rem;
+  margin-bottom: 6px;
+}
+
+.review-comment {
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.review-form {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px;
+  margin-top: 8px;
+}
+
+.review-form label {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin: 14px 0 6px;
+}
+
+.review-form label:first-child {
+  margin-top: 0;
+}
+
+.review-form input,
+.review-form textarea,
+.review-form select {
+  width: 100%;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-family: var(--sans);
+  font-size: 0.88rem;
+  resize: vertical;
+}
+
+.review-form input:focus,
+.review-form textarea:focus,
+.review-form select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.review-form .btn {
+  margin-top: 18px;
+  width: 100%;
+}
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--accent);
+  color: #1a140a;
+  padding: 12px 22px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  z-index: 100;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Discover feed (TikTok-style scroll) */
+body.discover-page {
+  height: 100vh;
+  overflow: hidden;
+}
+
+.discover-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  background: linear-gradient(to bottom, rgba(18, 16, 20, 0.85), transparent);
+}
+
+.discover-back,
+.discover-progress {
+  font-size: 0.8rem;
+  color: var(--text);
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 14px;
+  cursor: pointer;
+}
+
+.discover-progress {
+  cursor: default;
+}
+
+.discover-logo {
+  font-size: 1.1rem;
+}
+
+.discover-feed {
+  height: 100vh;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+.discover-loading {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+}
+
+.discover-panel {
+  position: relative;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+.discover-media {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #17151a;
+  overflow: hidden;
+}
+
+.discover-media.no-photo {
+  background-image:
+    repeating-linear-gradient(115deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 16px),
+    linear-gradient(160deg, color-mix(in srgb, var(--tint, var(--accent)) 26%, #17151a), #14121600 75%);
+}
+
+.discover-media .thumb-glyph {
+  font-size: clamp(7rem, 26vw, 13rem);
+  opacity: 0.5;
+  padding: 0;
+  text-shadow: none;
+}
+
+.discover-media .thumb-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.discover-media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 35%, rgba(0, 0, 0, 0.05), rgba(0,0,0,0.35) 100%);
+}
+
+.discover-overlay {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  padding: 110px 28px 64px;
+  background: linear-gradient(to top, var(--bg-elevated) 12%, rgba(18, 16, 20, 0.7) 45%, transparent 85%);
+}
+
+.discover-name {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: clamp(1.8rem, 6vw, 3.2rem);
+  margin: 14px 0 12px;
+  line-height: 1.3;
+  text-wrap: balance;
+}
+
+.discover-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  margin-bottom: 14px;
+}
+
+.discover-desc {
+  color: var(--text);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  max-width: 640px;
+  margin: 0 0 18px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.discover-panel .bar-tags {
+  margin-bottom: 24px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .discover-feed {
+    scroll-behavior: auto;
+  }
+}
+
+@media (max-width: 780px) {
+  .search-panel {
+    grid-template-columns: 1fr;
+  }
+  .detail-body {
+    grid-template-columns: 1fr;
+  }
+  .site-nav {
+    display: none;
+  }
+}
+</style>
+
+<!-- ============ HOME VIEW ============ -->
+<div id="view-home">
+  <header class="site-header">
+    <div class="container">
+      <a class="logo" href="#/" data-nav="/"><span class="mark">NEST</span><span class="city-badge">北見市</span></a>
+      <nav class="site-nav">
+        <a href="#/discover" data-nav="/discover">おすすめを見る</a>
+        <a href="#/search" data-nav="/search">店舗を探す</a>
+        <a href="#/roadmap" data-nav="/roadmap">北海道展開について</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero" id="search-section">
+    <div class="container">
+      <p class="hero-eyebrow">KITAMI BAR GUIDE</p>
+      <h1>今夜の一軒が、<br><em>きっと見つかる。</em></h1>
+      <p class="lead">北見市のバーに特化した検索・レビューサイト。一人飲み、記念日、観光の一杯まで、目的に合う一軒がきっと見つかります。</p>
+
+      <div class="search-panel">
+        <input type="text" id="keyword" placeholder="店名やキーワードで検索(例: ウイスキー、隠れ家)">
+        <select id="area-filter">
+          <option value="">エリアで絞り込む</option>
+        </select>
+        <select id="genre-filter">
+          <option value="">ジャンルで絞り込む</option>
+        </select>
+        <button class="btn" id="search-btn">検索</button>
+      </div>
+
+      <a class="btn-ghost discover-cta" href="#/discover" data-nav="/discover">▶ スクロールでおすすめを見つける</a>
+
+      <div class="tag-chips" id="tag-chips"></div>
+    </div>
+  </section>
+
+  <section class="results-section">
+    <div class="container">
+      <div class="results-header">
+        <h2><span class="results-count" id="results-count">0</span>件のバーが見つかりました</h2>
+        <select class="sort-select" id="sort-select">
+          <option value="recommend">おすすめ順</option>
+          <option value="rating">評価が高い順</option>
+          <option value="reviews">レビューが多い順</option>
+          <option value="name">店名順</option>
+        </select>
+      </div>
+      <div class="bar-grid" id="bar-grid"></div>
+      <div class="empty-state" id="empty-state" style="display:none;">
+        条件に合うバーが見つかりませんでした。検索条件を変えてお試しください。
+      </div>
+    </div>
+  </section>
+
+  <section class="roadmap-section" id="roadmap-section">
+    <div class="container">
+      <div class="roadmap-header">
+        <p class="hero-eyebrow">FROM KITAMI TO HOKKAIDO</p>
+        <h2>北見から、北海道全域へ。</h2>
+        <p>大手グルメサイトが手薄な地方都市のバー情報に特化し、まずは北見市で密度の濃いデータベースを構築。地域に根ざした信頼を積み重ねながら、道内の各都市へ順次展開していきます。</p>
+      </div>
+      <div class="city-grid">
+        <div class="city-card active">
+          <div class="city-name">北見市</div>
+          <div class="status">公開中</div>
+        </div>
+        <div class="city-card">
+          <div class="city-name">網走市</div>
+          <div class="status">準備中</div>
+        </div>
+        <div class="city-card">
+          <div class="city-name">旭川市</div>
+          <div class="status">準備中</div>
+        </div>
+        <div class="city-card">
+          <div class="city-name">帯広市</div>
+          <div class="status">準備中</div>
+        </div>
+        <div class="city-card">
+          <div class="city-name">釧路市</div>
+          <div class="status">準備中</div>
+        </div>
+        <div class="city-card">
+          <div class="city-name">札幌市</div>
+          <div class="status">構想中</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>NEST &mdash; 北見市発、バー専門の検索・レビューサイト</p>
+      <p class="disclaimer">※本サイトに掲載の店舗情報はデモ用のサンプルデータです。実在の店舗とは関係ありません。写真はイメージを伝えるためのフリー素材で、実店舗の写真ではありません。</p>
+    </div>
+  </footer>
+</div>
+
+<!-- ============ BAR DETAIL VIEW ============ -->
+<div id="view-bar" hidden>
+  <header class="site-header">
+    <div class="container">
+      <a class="logo" href="#/" data-nav="/"><span class="mark">NEST</span><span class="city-badge">北見市</span></a>
+      <nav class="site-nav">
+        <a href="#/discover" data-nav="/discover">おすすめを見る</a>
+        <a href="#/search" data-nav="/search">店舗を探す</a>
+        <a href="#/roadmap" data-nav="/roadmap">北海道展開について</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="detail-hero">
+    <div class="container">
+      <a class="back-link" href="#/" data-nav="/">← 一覧に戻る</a>
+      <div class="detail-top" id="detail-top"></div>
+    </div>
+  </section>
+
+  <div class="container detail-body">
+    <main>
+      <div class="detail-section">
+        <h2>お店について</h2>
+        <p class="description-text" id="description-text"></p>
+      </div>
+
+      <div class="detail-section">
+        <h2>レビュー <span id="review-count-label"></span></h2>
+        <div id="review-list"></div>
+      </div>
+
+      <div class="detail-section">
+        <h2>レビューを投稿する</h2>
+        <form class="review-form" id="review-form">
+          <label for="reviewer-name">お名前(ニックネーム可)</label>
+          <input type="text" id="reviewer-name" required maxlength="20" placeholder="例: 北見太郎">
+
+          <label for="reviewer-rating">評価</label>
+          <select id="reviewer-rating" required>
+            <option value="5">★★★★★ (5)</option>
+            <option value="4">★★★★☆ (4)</option>
+            <option value="3" selected>★★★☆☆ (3)</option>
+            <option value="2">★★☆☆☆ (2)</option>
+            <option value="1">★☆☆☆☆ (1)</option>
+          </select>
+
+          <label for="reviewer-comment">コメント</label>
+          <textarea id="reviewer-comment" rows="4" required maxlength="300" placeholder="お店の雰囲気やおすすめメニューなど"></textarea>
+
+          <button type="submit" class="btn">投稿する</button>
+        </form>
+      </div>
+    </main>
+
+    <aside>
+      <div class="detail-section">
+        <h2>店舗情報</h2>
+        <div class="info-card" id="info-card"></div>
+      </div>
+    </aside>
+  </div>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>NEST &mdash; 北見市発、バー専門の検索・レビューサイト</p>
+      <p class="disclaimer">※本サイトに掲載の店舗情報はデモ用のサンプルデータです。実在の店舗とは関係ありません。写真はイメージを伝えるためのフリー素材で、実店舗の写真ではありません。</p>
+    </div>
+  </footer>
+</div>
+
+<!-- ============ DISCOVER VIEW ============ -->
+<div id="view-discover" hidden>
+  <header class="discover-header">
+    <a class="discover-back" href="#/" data-nav="/">✕ 一覧に戻る</a>
+    <div class="logo discover-logo"><span class="mark">NEST</span></div>
+    <span class="discover-progress" id="discover-progress">1 / 1</span>
+  </header>
+  <main class="discover-feed" id="discover-feed">
+    <p class="discover-loading">読み込み中...</p>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+
+/* ---------------------------------------------------------
+   Data (embedded — same shape as data/bars.json in the source project)
+--------------------------------------------------------- */
+const CITY = {
+  city: "北海道北見市",
+  areas: ["北見駅前", "大通", "高栄", "常盤町", "柏陽", "常呂", "三輪"],
+  genres: ["ウイスキー", "カクテル", "ワイン", "クラフトビール", "ジャズ", "スポーツ", "立ち飲み", "シガー", "スナック"],
+  tags: ["一人飲み", "喫煙可", "デート", "大人数可", "カラオケ", "ダーツ", "深夜営業", "フード充実"],
+  bars: [
+    {
+      id: "orion", name: "BAR ORION", genre: "ウイスキー", area: "北見駅前",
+      address: "北海道北見市北一条西1丁目", hours: "19:00〜翌2:00(日曜休)",
+      priceRange: "¥3,000〜¥5,000", phone: "0157-23-XXXX",
+      tags: ["一人飲み", "喫煙可", "深夜営業"],
+      description: "重厚なウイスキーの香りに包まれる隠れ家バー。世界中から集めた200種以上のシングルモルトと、マスターが選ぶ一杯を静かなカウンターで楽しめる。",
+      icon: "🥃",
+      photo: "images/orion.jpg",
+      reviews: [
+        { id: "orion-1", name: "K.S", rating: 5, date: "2026-02-14", comment: "マスターのウイスキー知識がすごい。好みを伝えると必ず好みの一杯を出してくれます。" },
+        { id: "orion-2", name: "はるか", rating: 4, date: "2025-11-03", comment: "落ち着いた雰囲気で一人でも入りやすかったです。少し値段は高め。" },
+        { id: "orion-3", name: "北見在住15年", rating: 5, date: "2025-08-20", comment: "記念日に利用。特別な夜になりました。" }
+      ]
+    },
+    {
+      id: "nocturne", name: "Cocktail Lounge NOCTURNE", genre: "カクテル", area: "大通",
+      address: "北海道北見市大通西3丁目", hours: "18:00〜翌1:00(月曜休)",
+      priceRange: "¥3,500〜¥6,000", phone: "0157-24-XXXX",
+      tags: ["デート", "一人飲み"],
+      description: "季節のフルーツと道産素材を使ったオリジナルカクテルが評判。落ち着いた照明とジャズが流れる大人の空間でゆったりとした夜を。",
+      icon: "🍸",
+      photo: "images/nocturne.jpg",
+      reviews: [
+        { id: "nocturne-1", name: "M.Y", rating: 5, date: "2026-01-30", comment: "季節限定のカクテルが本当に美味しい。北見メロンを使ったカクテルに感動しました。" },
+        { id: "nocturne-2", name: "ゆき", rating: 4, date: "2025-12-05", comment: "デートで利用。女性一人でも入りやすい雰囲気だと思います。" }
+      ]
+    },
+    {
+      id: "tategin-sugi", name: "立ち呑み バー杉", genre: "立ち飲み", area: "高栄",
+      address: "北海道北見市高栄東町", hours: "17:00〜23:00(不定休)",
+      priceRange: "¥1,500〜¥2,500", phone: "0157-25-XXXX",
+      tags: ["一人飲み", "大人数可"],
+      description: "仕事帰りにサクッと一杯。地元の常連と観光客が肩を並べる、北見のソーシャルハブ的な立ち飲みバー。",
+      icon: "🍺",
+      photo: "images/tategin-sugi.jpg",
+      reviews: [
+        { id: "sugi-1", name: "T.N", rating: 4, date: "2026-03-01", comment: "安くて気軽。仕事終わりにふらっと寄れるのが良い。" },
+        { id: "sugi-2", name: "たかし", rating: 5, date: "2025-09-18", comment: "常連さんとすぐ仲良くなれました。北見に来たら絶対また行きたい。" },
+        { id: "sugi-3", name: "旅人A", rating: 3, date: "2025-06-10", comment: "混んでいる時間は少し立ち位置に困るかも。味は良い。" }
+      ]
+    },
+    {
+      id: "mingus", name: "JAZZ BAR MINGUS", genre: "ジャズ", area: "常盤町",
+      address: "北海道北見市常盤町", hours: "19:30〜翌1:00(火曜休)",
+      priceRange: "¥3,000〜¥5,500", phone: "0157-26-XXXX",
+      tags: ["デート", "深夜営業"],
+      description: "上質な音響設備で聴くジャズと共に一杯を。週末は地元ミュージシャンによる生演奏ライブも開催される。",
+      icon: "🎷",
+      photo: "images/mingus.jpg",
+      reviews: [
+        { id: "mingus-1", name: "J.O", rating: 5, date: "2026-02-01", comment: "生演奏の日に行きました。音の良さに驚きます。" },
+        { id: "mingus-2", name: "さとる", rating: 4, date: "2025-10-22", comment: "落ち着いた大人の時間を過ごせます。" }
+      ]
+    },
+    {
+      id: "budouhatake", name: "WINE & BAR 葡萄畑", genre: "ワイン", area: "大通",
+      address: "北海道北見市大通東2丁目", hours: "18:00〜24:00(水曜休)",
+      priceRange: "¥4,000〜¥7,000", phone: "0157-27-XXXX",
+      tags: ["デート", "フード充実"],
+      description: "余市・仁木など道産ワイナリーを中心に揃えたワインバー。チーズや燻製料理とのペアリングが自慢。",
+      icon: "🍷",
+      photo: "images/budouhatake.jpg",
+      reviews: [
+        { id: "budou-1", name: "R.F", rating: 5, date: "2025-12-24", comment: "道産ワインの品揃えが素晴らしい。ペアリングのおまかせが最高でした。" },
+        { id: "budou-2", name: "えみ", rating: 4, date: "2025-07-14", comment: "少し価格は高めですが、特別な日にはぴったり。" }
+      ]
+    },
+    {
+      id: "curling-stone", name: "CURLING BAR STONE", genre: "スポーツ", area: "常呂",
+      address: "北海道北見市常呂町", hours: "18:00〜翌0:00(月曜休)",
+      priceRange: "¥2,500〜¥4,000", phone: "0157-28-XXXX",
+      tags: ["大人数可", "ダーツ", "フード充実"],
+      description: "カーリングの聖地・常呂発。日本代表戦の中継で盛り上がるスポーツバー。壁一面のカーリング写真とサイン色紙が名物。",
+      icon: "🥌",
+      photo: "images/curling-stone.jpg",
+      reviews: [
+        { id: "stone-1", name: "常呂っ子", rating: 5, date: "2026-01-10", comment: "代表戦の日は最高の盛り上がり。地元愛を感じるお店です。" },
+        { id: "stone-2", name: "H.M", rating: 4, date: "2025-11-15", comment: "観光で立ち寄りましたが、店主さんがカーリングの話を色々教えてくれて楽しかった。" }
+      ]
+    },
+    {
+      id: "hoppy-north", name: "クラフトビール Bar HOPPY NORTH", genre: "クラフトビール", area: "柏陽",
+      address: "北海道北見市柏陽町", hours: "17:00〜23:30(無休)",
+      priceRange: "¥2,000〜¥3,500", phone: "0157-29-XXXX",
+      tags: ["一人飲み", "フード充実"],
+      description: "北海道内のクラフトビール醸造所から届く樽生10種が揃う。道産食材にこだわった一皿料理も充実。",
+      icon: "🍻",
+      photo: "images/hoppy-north.jpg",
+      reviews: [
+        { id: "hoppy-1", name: "N.K", rating: 5, date: "2026-03-05", comment: "タップの種類がいつも新鮮。飲み比べセットがおすすめ。" },
+        { id: "hoppy-2", name: "まりこ", rating: 4, date: "2025-09-02", comment: "女性一人でも入りやすい明るい雰囲気でした。" }
+      ]
+    },
+    {
+      id: "kemuri", name: "Bar CIGAR ROOM 燻", genre: "シガー", area: "北見駅前",
+      address: "北海道北見市北二条東1丁目", hours: "20:00〜翌2:00(日祝休)",
+      priceRange: "¥4,500〜¥8,000", phone: "0157-30-XXXX",
+      tags: ["喫煙可", "深夜営業"],
+      description: "葉巻とオールドファッションドの香りが漂う大人の隠れ家。専用ヒュミドールで管理された銘柄豊富なシガーが自慢。",
+      icon: "🚬",
+      photo: "images/kemuri.jpg",
+      reviews: [
+        { id: "kemuri-1", name: "S.T", rating: 5, date: "2025-12-30", comment: "シガーの品揃えが道内屈指だと思います。ゆっくり寛げました。" },
+        { id: "kemuri-2", name: "ひろき", rating: 3, date: "2025-08-08", comment: "雰囲気は最高ですが初心者には少し敷居が高いかも。" }
+      ]
+    },
+    {
+      id: "tsukiakari", name: "スナック 月あかり", genre: "スナック", area: "三輪",
+      address: "北海道北見市三輪", hours: "19:00〜翌1:00(日曜休)",
+      priceRange: "¥3,000〜¥5,000(チャージ込)", phone: "0157-31-XXXX",
+      tags: ["カラオケ", "深夜営業"],
+      description: "昭和の温かみを残す老舗スナック。ママの気さくなトークとカラオケで、初めてでも馴染みやすい雰囲気。",
+      icon: "🎤",
+      photo: "images/tsukiakari.jpg",
+      reviews: [
+        { id: "tsuki-1", name: "常連K", rating: 5, date: "2026-01-20", comment: "ママが本当に話し上手で、毎回癒されます。" },
+        { id: "tsuki-2", name: "初見さん", rating: 4, date: "2025-10-01", comment: "初めて入りましたが優しく迎えてもらえました。" }
+      ]
+    }
+  ]
+};
+
+/* ---------------------------------------------------------
+   Thumbnail treatment — a mood photo (free stock, standing in
+   for real shop photos not yet taken). Chosen deliberately to
+   avoid liquor-shelf / counter shots: warm light, hands, people,
+   not "look how much whiskey we own." Swap `photo` per bar for
+   the real thing once a shop's owner sends one — same markup.
+
+   GENRE_MARKS stays only as the pre-photo fallback (a tinted
+   kanji "wordmark") for any bar without a photo assigned.
+--------------------------------------------------------- */
+const GENRE_MARKS = {
+  "ウイスキー": { glyph: "樽", tint: "#caa15a" },
+  "カクテル": { glyph: "杯", tint: "#c96a8a" },
+  "ワイン": { glyph: "葡", tint: "#9a5a7a" },
+  "立ち飲み": { glyph: "立", tint: "#c98a4a" },
+  "ジャズ": { glyph: "音", tint: "#5a8ac9" },
+  "スポーツ": { glyph: "戦", tint: "#4a9a72" },
+  "クラフトビール": { glyph: "泡", tint: "#c9a54a" },
+  "シガー": { glyph: "燻", tint: "#8a6a4a" },
+  "スナック": { glyph: "宵", tint: "#c95a5a" },
+};
+const DEFAULT_MARK = { glyph: "酒", tint: "#caa15a" };
+
+function getGenreMark(genre) {
+  return GENRE_MARKS[genre] || DEFAULT_MARK;
+}
+
+// bar.photo is a real photo file published alongside this artifact
+// (see the `images/` folder — same relative paths as the local
+// project). Each one was picked and verified by hand: a mood shot
+// (warm light, hands, people), never a bottle-shelf/counter-flex
+// shot. If a bar has no photo yet, or the file ever fails to load,
+// it falls back to the tinted genre glyph below.
+function getPhotoId(bar) {
+  return bar.photo || null;
+}
+
+function renderThumb(bar) {
+  const photoId = getPhotoId(bar);
+  if (photoId) {
+    return `<img class="thumb-photo" src="${photoId}" alt="${escapeHtml(bar.name)}の店内の雰囲気" loading="lazy" onerror="this.closest('.bar-thumb,.detail-thumb,.discover-media').classList.add('no-photo'); this.remove(); this.nextElementSibling && this.nextElementSibling.remove();"><div class="thumb-photo-overlay"></div>`;
+  }
+  const mark = getGenreMark(bar.genre);
+  return `<span class="thumb-glyph">${escapeHtml(mark.glyph)}</span>`;
+}
+
+function thumbStyleAttr(bar) {
+  const mark = getGenreMark(bar.genre);
+  return ` style="--tint:${mark.tint}"`;
+}
+
+function thumbClass(bar, base) {
+  return getPhotoId(bar) ? base : base + " no-photo";
+}
+
+/* ---------------------------------------------------------
+   Reviews (localStorage — persists per-viewer, in this artifact's own origin)
+--------------------------------------------------------- */
+const REVIEW_STORAGE_PREFIX = "barfinder_reviews_";
+
+function getUserReviews(barId) {
+  try {
+    const raw = localStorage.getItem(REVIEW_STORAGE_PREFIX + barId);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function addUserReview(barId, review) {
+  const reviews = getUserReviews(barId);
+  reviews.push(review);
+  try {
+    localStorage.setItem(REVIEW_STORAGE_PREFIX + barId, JSON.stringify(reviews));
+  } catch (e) {
+    /* storage unavailable in this browsing context — review still renders for this session */
+  }
+  return reviews;
+}
+
+function getAllReviews(bar) {
+  const seed = bar.reviews || [];
+  const user = getUserReviews(bar.id);
+  return [...seed, ...user].sort((a, b) => new Date(b.date) - new Date(a.date));
+}
+
+function computeAverage(reviews) {
+  if (!reviews.length) return 0;
+  const total = reviews.reduce((sum, r) => sum + r.rating, 0);
+  return total / reviews.length;
+}
+
+function renderStars(rating) {
+  const full = Math.round(rating);
+  return "★".repeat(full) + "☆".repeat(5 - full);
+}
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+/* ---------------------------------------------------------
+   Router — three views in one document, switched via location.hash
+--------------------------------------------------------- */
+const views = {
+  home: document.getElementById("view-home"),
+  bar: document.getElementById("view-bar"),
+  discover: document.getElementById("view-discover"),
+};
+
+function showView(name) {
+  Object.keys(views).forEach((key) => {
+    views[key].hidden = key !== name;
+  });
+  document.body.classList.toggle("discover-page", name === "discover");
+}
+
+function navigate(path) {
+  location.hash = "#" + path;
+}
+
+function route() {
+  const hash = location.hash.replace(/^#\/?/, "");
+
+  if (hash === "discover") {
+    showView("discover");
+    initDiscoverOnce();
+  } else if (hash.startsWith("bar/")) {
+    showView("bar");
+    window.scrollTo(0, 0);
+    renderBarDetail(hash.slice(4));
+  } else {
+    showView("home");
+    if (hash === "search") {
+      requestAnimationFrame(() => document.getElementById("search-section").scrollIntoView());
+    } else if (hash === "roadmap") {
+      requestAnimationFrame(() => document.getElementById("roadmap-section").scrollIntoView());
+    } else {
+      window.scrollTo(0, 0);
+    }
+  }
+}
+
+document.addEventListener("click", (e) => {
+  const trigger = e.target.closest("[data-nav]");
+  if (!trigger) return;
+  e.preventDefault();
+  navigate(trigger.dataset.nav);
+});
+
+window.addEventListener("hashchange", route);
+
+/* ---------------------------------------------------------
+   Home view — search / filter / sort
+--------------------------------------------------------- */
+let activeTag = null;
+
+const grid = document.getElementById("bar-grid");
+const emptyState = document.getElementById("empty-state");
+const resultsCount = document.getElementById("results-count");
+const keywordInput = document.getElementById("keyword");
+const areaFilter = document.getElementById("area-filter");
+const genreFilter = document.getElementById("genre-filter");
+const sortSelect = document.getElementById("sort-select");
+const tagChipsEl = document.getElementById("tag-chips");
+
+function populateFilters() {
+  CITY.areas.forEach((area) => {
+    const opt = document.createElement("option");
+    opt.value = area;
+    opt.textContent = area;
+    areaFilter.appendChild(opt);
+  });
+  CITY.genres.forEach((genre) => {
+    const opt = document.createElement("option");
+    opt.value = genre;
+    opt.textContent = genre;
+    genreFilter.appendChild(opt);
+  });
+}
+
+function populateTags() {
+  tagChipsEl.innerHTML = CITY.tags
+    .map((tag) => `<button type="button" class="chip" data-tag="${escapeHtml(tag)}">${escapeHtml(tag)}</button>`)
+    .join("");
+  tagChipsEl.querySelectorAll(".chip").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      const tag = chip.dataset.tag;
+      activeTag = activeTag === tag ? null : tag;
+      tagChipsEl.querySelectorAll(".chip").forEach((c) => c.classList.toggle("active", c.dataset.tag === activeTag));
+      renderHome();
+    });
+  });
+}
+
+function getFilteredBars() {
+  const keyword = keywordInput.value.trim().toLowerCase();
+  const area = areaFilter.value;
+  const genre = genreFilter.value;
+
+  return CITY.bars.filter((bar) => {
+    const matchesKeyword =
+      !keyword ||
+      bar.name.toLowerCase().includes(keyword) ||
+      bar.genre.toLowerCase().includes(keyword) ||
+      bar.tags.some((t) => t.toLowerCase().includes(keyword)) ||
+      bar.description.toLowerCase().includes(keyword);
+    const matchesArea = !area || bar.area === area;
+    const matchesGenre = !genre || bar.genre === genre;
+    const matchesTag = !activeTag || bar.tags.includes(activeTag);
+    return matchesKeyword && matchesArea && matchesGenre && matchesTag;
+  });
+}
+
+function sortBars(bars) {
+  const withStats = bars.map((bar) => {
+    const reviews = getAllReviews(bar);
+    return { bar, avg: computeAverage(reviews), count: reviews.length };
+  });
+
+  switch (sortSelect.value) {
+    case "rating":
+      withStats.sort((a, b) => b.avg - a.avg);
+      break;
+    case "reviews":
+      withStats.sort((a, b) => b.count - a.count);
+      break;
+    case "name":
+      withStats.sort((a, b) => a.bar.name.localeCompare(b.bar.name, "ja"));
+      break;
+    default:
+      withStats.sort((a, b) => b.avg * b.count - a.avg * a.count);
+  }
+  return withStats;
+}
+
+function renderHome() {
+  const withStats = sortBars(getFilteredBars());
+
+  resultsCount.textContent = withStats.length;
+  grid.innerHTML = "";
+
+  if (withStats.length === 0) {
+    emptyState.style.display = "block";
+    return;
+  }
+  emptyState.style.display = "none";
+
+  withStats.forEach(({ bar, avg, count }) => {
+    const card = document.createElement("a");
+    card.href = "#/bar/" + bar.id;
+    card.dataset.nav = "/bar/" + bar.id;
+    card.className = "bar-card";
+    card.innerHTML = `
+      <div class="${thumbClass(bar, "bar-thumb")}"${thumbStyleAttr(bar)}>
+        ${renderThumb(bar)}
+        <span class="bar-genre-badge">${escapeHtml(bar.genre)}</span>
+      </div>
+      <div class="bar-body">
+        <div class="bar-name">${escapeHtml(bar.name)}</div>
+        <div class="bar-meta">
+          <span>📍 ${escapeHtml(bar.area)}</span>
+        </div>
+        <div class="bar-rating">${renderStars(avg)} <span class="count">${avg.toFixed(1)}(${count}件)</span></div>
+        <div class="bar-tags">
+          ${bar.tags.slice(0, 3).map((t) => `<span class="tag">${escapeHtml(t)}</span>`).join("")}
+        </div>
+        <div class="bar-price">
+          <span>${escapeHtml(bar.priceRange)}</span>
+          <span class="view-link">詳細を見る →</span>
+        </div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+keywordInput.addEventListener("input", renderHome);
+areaFilter.addEventListener("change", renderHome);
+genreFilter.addEventListener("change", renderHome);
+sortSelect.addEventListener("change", renderHome);
+document.getElementById("search-btn").addEventListener("click", (e) => {
+  e.preventDefault();
+  renderHome();
+});
+
+/* ---------------------------------------------------------
+   Bar detail view
+--------------------------------------------------------- */
+const detailTop = document.getElementById("detail-top");
+const descriptionText = document.getElementById("description-text");
+const reviewList = document.getElementById("review-list");
+const reviewCountLabel = document.getElementById("review-count-label");
+const infoCard = document.getElementById("info-card");
+const reviewForm = document.getElementById("review-form");
+const toast = document.getElementById("toast");
+
+let currentBarId = null;
+
+function renderBarDetail(barId) {
+  currentBarId = barId;
+  const bar = CITY.bars.find((b) => b.id === barId);
+
+  if (!bar) {
+    detailTop.innerHTML = "<p>店舗が見つかりませんでした。</p>";
+    descriptionText.textContent = "";
+    reviewList.innerHTML = "";
+    infoCard.innerHTML = "";
+    reviewCountLabel.textContent = "";
+    return;
+  }
+
+  const reviews = getAllReviews(bar);
+  const avg = computeAverage(reviews);
+
+  detailTop.innerHTML = `
+    <div class="${thumbClass(bar, "detail-thumb")}"${thumbStyleAttr(bar)}>${renderThumb(bar)}</div>
+    <div class="detail-title-block">
+      <span class="bar-genre-badge">${escapeHtml(bar.genre)}</span>
+      <h1>${escapeHtml(bar.name)}</h1>
+      <div class="detail-meta-line">
+        <span>📍 ${escapeHtml(bar.area)}</span>
+        <span class="bar-rating">${renderStars(avg)} ${avg.toFixed(1)}<span class="count">(${reviews.length}件)</span></span>
+        <span>${escapeHtml(bar.priceRange)}</span>
+      </div>
+    </div>
+  `;
+
+  descriptionText.textContent = bar.description;
+  reviewCountLabel.textContent = `(${reviews.length}件)`;
+
+  infoCard.innerHTML = `
+    <div class="info-row"><span class="label">住所</span><span>${escapeHtml(bar.address)}</span></div>
+    <div class="info-row"><span class="label">営業時間</span><span>${escapeHtml(bar.hours)}</span></div>
+    <div class="info-row"><span class="label">予算</span><span>${escapeHtml(bar.priceRange)}</span></div>
+    <div class="info-row"><span class="label">電話</span><span>${escapeHtml(bar.phone)}</span></div>
+    <div class="info-row"><span class="label">タグ</span><span>${bar.tags.map(escapeHtml).join(" / ")}</span></div>
+  `;
+
+  if (reviews.length === 0) {
+    reviewList.innerHTML = '<p class="description-text">まだレビューがありません。最初のレビューを投稿してみましょう。</p>';
+  } else {
+    reviewList.innerHTML = reviews
+      .map(
+        (r) => `
+        <div class="review-item">
+          <div class="review-item-head">
+            <span class="review-name">${escapeHtml(r.name)}</span>
+            <span class="review-date">${escapeHtml(r.date)}</span>
+          </div>
+          <div class="review-stars">${renderStars(r.rating)}</div>
+          <p class="review-comment">${escapeHtml(r.comment)}</p>
+        </div>
+      `
+      )
+      .join("");
+  }
+
+  reviewForm.reset();
+  document.getElementById("reviewer-rating").value = "3";
+}
+
+function showToast(message) {
+  toast.textContent = message;
+  toast.classList.add("show");
+  setTimeout(() => toast.classList.remove("show"), 2200);
+}
+
+reviewForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  if (!currentBarId) return;
+
+  const name = document.getElementById("reviewer-name").value.trim();
+  const rating = Number(document.getElementById("reviewer-rating").value);
+  const comment = document.getElementById("reviewer-comment").value.trim();
+  if (!name || !comment) return;
+
+  addUserReview(currentBarId, {
+    id: currentBarId + "-user-" + Date.now(),
+    name,
+    rating,
+    date: new Date().toISOString().slice(0, 10),
+    comment,
+  });
+
+  showToast("レビューを投稿しました");
+  renderBarDetail(currentBarId);
+});
+
+/* ---------------------------------------------------------
+   Discover view — TikTok-style scroll feed
+--------------------------------------------------------- */
+const discoverFeed = document.getElementById("discover-feed");
+const discoverProgress = document.getElementById("discover-progress");
+let discoverInitialized = false;
+
+function initDiscoverOnce() {
+  if (discoverInitialized) return;
+  discoverInitialized = true;
+
+  const withStats = CITY.bars.map((bar) => {
+    const reviews = getAllReviews(bar);
+    return { bar, avg: computeAverage(reviews), count: reviews.length };
+  });
+  withStats.sort((a, b) => b.avg * b.count - a.avg * a.count);
+
+  discoverProgress.textContent = `1 / ${withStats.length}`;
+
+  discoverFeed.innerHTML = withStats
+    .map(
+      ({ bar, avg, count }) => `
+      <section class="discover-panel" data-id="${bar.id}">
+        <div class="${thumbClass(bar, "discover-media")}"${thumbStyleAttr(bar)}>${renderThumb(bar)}</div>
+        <div class="discover-overlay">
+          <span class="bar-genre-badge">${escapeHtml(bar.genre)}</span>
+          <h2 class="discover-name">${escapeHtml(bar.name)}</h2>
+          <div class="discover-meta">
+            <span>📍 ${escapeHtml(bar.area)}</span>
+            <span class="bar-rating">${renderStars(avg)} ${avg.toFixed(1)}<span class="count">(${count}件)</span></span>
+            <span>${escapeHtml(bar.priceRange)}</span>
+          </div>
+          <p class="discover-desc">${escapeHtml(bar.description)}</p>
+          <div class="bar-tags">
+            ${bar.tags.map((t) => `<span class="tag">${escapeHtml(t)}</span>`).join("")}
+          </div>
+          <a class="btn" href="#/bar/${bar.id}" data-nav="/bar/${bar.id}">詳細を見る</a>
+        </div>
+      </section>
+    `
+    )
+    .join("");
+
+  requestAnimationFrame(() => {
+    setupDiscoverProgress();
+    setupDiscoverKeyboardNav();
+  });
+}
+
+function setupDiscoverProgress() {
+  const panels = Array.from(document.querySelectorAll(".discover-panel"));
+  const total = panels.length;
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const index = panels.indexOf(entry.target);
+          discoverProgress.textContent = `${index + 1} / ${total}`;
+        }
+      });
+    },
+    { root: discoverFeed, threshold: 0.6 }
+  );
+
+  panels.forEach((panel) => observer.observe(panel));
+}
+
+function setupDiscoverKeyboardNav() {
+  document.addEventListener("keydown", (e) => {
+    if (views.discover.hidden) return;
+    const panels = Array.from(document.querySelectorAll(".discover-panel"));
+    if (panels.length === 0) return;
+
+    const feedTop = discoverFeed.getBoundingClientRect().top;
+    const currentIndex = panels.findIndex((p) => {
+      const r = p.getBoundingClientRect();
+      return r.top <= feedTop + 10 && r.bottom > feedTop + 10;
+    });
+
+    if (e.key === "ArrowDown" || e.key === "PageDown") {
+      e.preventDefault();
+      panels[Math.min(currentIndex + 1, panels.length - 1)].scrollIntoView({ behavior: "smooth" });
+    } else if (e.key === "ArrowUp" || e.key === "PageUp") {
+      e.preventDefault();
+      panels[Math.max(currentIndex - 1, 0)].scrollIntoView({ behavior: "smooth" });
+    }
+  });
+}
+
+/* ---------------------------------------------------------
+   Boot
+--------------------------------------------------------- */
+populateFilters();
+populateTags();
+renderHome();
+route();
+</script>
+
+</body></html>
